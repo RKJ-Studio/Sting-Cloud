@@ -1,10 +1,12 @@
 {
   "name": "stingcloud",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "description": "StingCloud — All-in-One Cloud, Web Development & Interactive 3D VPS Platform",
   "scripts": {
-    "build": "npx esbuild vps-app.js --bundle --minify --outfile=vps-bundle.js"
+    "build": "npx esbuild vps-app.js --bundle --minify --outfile=vps-bundle.js",
+    "serve": "npx serve ."
   },
   "dependencies": {
-    "three": "^0.186.1"
+    "three": "^0.170.0"
   }
 }

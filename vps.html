@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="vps-style.css" />
-
 </head>
 <body>
 
@@ -64,9 +63,9 @@
         <div class="hero-actions">
           <button class="btn-explore" id="btnExplore">
             <span class="btn-icon">🔍</span>
-            <span>Open & Explore</span>
+            <span>Open &amp; Explore</span>
           </button>
-          <button class="btn-rotate" id="btnRotate">
+          <button class="btn-rotate active" id="btnRotate">
             <span class="btn-icon">↻</span>
             <span>Auto Rotate</span>
           </button>
@@ -86,9 +85,9 @@
     <!-- Control Bar (visible in OPEN state) -->
     <div class="control-bar" id="controlBar">
       <button class="ctrl-btn" id="btnReset" title="Close server">
-        <span>✕</span> Close
+        <span>✕</span> Close Chassis
       </button>
-      <div class="ctrl-hint">Click a glowing component to learn more</div>
+      <div class="ctrl-hint">Click a glowing component or label to inspect</div>
     </div>
 
     <!-- Component Labels (positioned via JS) -->
@@ -162,14 +161,5 @@
 
   <!-- 3D Application Bundle (Self-contained, works offline & on file://) -->
   <script src="vps-bundle.js"></script>
-  <script>
-    // Safety fallback: ensure loading overlay hides
-    setTimeout(function() {
-      var ls = document.getElementById('loadingScreen');
-      if (ls && !ls.classList.contains('hidden')) {
-        ls.classList.add('hidden');
-      }
-    }, 2000);
-  </script>
 </body>
 </html>

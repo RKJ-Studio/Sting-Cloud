@@ -1,7 +1,7 @@
 /* ============================================================
    STINGCLOUD — app.js
    Interactions: Navbar, Particles, Tilt, Counters, Typing,
-                 Scroll Reveal, Form, Cursor Glow
+                 Scroll Reveal, Form, Cursor Glow, Service Preselect
    ============================================================ */
 
 'use strict';
@@ -16,11 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initCounters();
   initCardTilt();
   initContactForm();
+  initServicePreselect();
   initProcessAnimation();
   initFooterYear();
   initCursorGlow();
   initNavMobile();
   initSmoothScrollCTAs();
+  initGlassCardHighlight();
 });
 
 
@@ -35,7 +37,6 @@ function initNavbar() {
     const scrollY = window.scrollY;
     navbar.classList.toggle('scrolled', scrollY > 40);
 
-    // Scroll spy: calculate which section is currently in view
     const scrollPosition = scrollY + 200;
     let currentSectionId = '';
 
@@ -47,7 +48,6 @@ function initNavbar() {
       }
     });
 
-    // If reached bottom of page, activate contact
     if ((window.innerHeight + scrollY) >= document.documentElement.scrollHeight - 120) {
       currentSectionId = 'contact';
     }
@@ -65,6 +65,7 @@ function initNavbar() {
   updateNav();
 }
 
+
 /* ── 3. MOBILE NAV ── */
 function initNavMobile() {
   const toggle = document.getElementById('navToggle');
@@ -73,8 +74,7 @@ function initNavMobile() {
 
   toggle.addEventListener('click', () => {
     const isOpen = menu.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', isOpen);
-    // Animate hamburger
+    toggle.setAttribute('aria-expanded', String(isOpen));
     const spans = toggle.querySelectorAll('span');
     if (isOpen) {
       spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
@@ -85,7 +85,6 @@ function initNavMobile() {
     }
   });
 
-  // Close on link click
   menu.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', () => {
       menu.classList.remove('open');
@@ -94,7 +93,6 @@ function initNavMobile() {
     });
   });
 
-  // Close on outside click
   document.addEventListener('click', (e) => {
     if (!toggle.contains(e.target) && !menu.contains(e.target)) {
       menu.classList.remove('open');
@@ -135,7 +133,7 @@ function initParticles() {
 
   function init() {
     resize();
-    const count = Math.min(Math.floor(W * H / 8000), 120);
+    const count = Math.min(Math.floor((W * H) / 8000), 120);
     particles = Array.from({ length: count }, createParticle);
   }
 
@@ -147,23 +145,21 @@ function initParticles() {
   });
   canvas.addEventListener('mouseleave', () => { mouseX = -9999; mouseY = -9999; });
 
-  function draw(ts) {
+  function draw() {
     ctx.clearRect(0, 0, W, H);
     particles.forEach(p => {
       p.pulse += 0.012;
       const alpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
 
-      // Mouse repulsion
       const dx = p.x - mouseX;
       const dy = p.y - mouseY;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 100) {
-        const force = (100 - dist) / 100 * 0.5;
+      if (dist < 100 && dist > 0) {
+        const force = ((100 - dist) / 100) * 0.5;
         p.vx += (dx / dist) * force;
         p.vy += (dy / dist) * force;
       }
 
-      // Dampen velocity
       p.vx *= 0.98;
       p.vy *= 0.98;
 
@@ -181,7 +177,6 @@ function initParticles() {
       ctx.fill();
     });
 
-    // Draw connections
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
         const dx = particles[i].x - particles[j].x;
@@ -210,7 +205,6 @@ function initParticles() {
     resizeTimer = setTimeout(init, 200);
   }, { passive: true });
 
-  // Pause when tab hidden
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) cancelAnimationFrame(animId);
     else animId = requestAnimationFrame(draw);
@@ -223,7 +217,6 @@ function initTyping() {
   const el = document.getElementById('typingText');
   if (!el) return;
 
-  // Phrases completing "One Platform For ..."
   const phrases = [
     'Web Development.',
     'Cloud Hosting.',
@@ -234,9 +227,9 @@ function initTyping() {
   ];
 
   let phraseIndex = 0;
-  let charIndex = 0;
-  let isDeleting = false;
-  let isPaused = false;
+  let charIndex = phrases[0].length;
+  let isDeleting = true;
+  let isPaused = true;
 
   function type() {
     const current = phrases[phraseIndex];
@@ -253,7 +246,7 @@ function initTyping() {
       if (charIndex === 0) {
         isDeleting = false;
         phraseIndex = (phraseIndex + 1) % phrases.length;
-        setTimeout(type, 400);
+        setTimeout(type, 350);
         return;
       }
       setTimeout(type, 40);
@@ -270,23 +263,21 @@ function initTyping() {
     }
   }
 
-  // Add cursor style
   el.style.borderRight = '3px solid #38bdf8';
   el.style.paddingRight = '4px';
 
   const style = document.createElement('style');
-  style.textContent = `@keyframes cursorBlink { 0%,100%{border-color:#38bdf8} 50%{border-color:transparent} }`;
-  style.textContent += `#typingText { animation: cursorBlink 0.8s step-end infinite; }`;
+  style.textContent = `@keyframes cursorBlink { 0%,100%{border-color:#38bdf8} 50%{border-color:transparent} } #typingText { animation: cursorBlink 0.8s step-end infinite; }`;
   document.head.appendChild(style);
 
-  setTimeout(type, 800);
+  setTimeout(type, 1200);
 }
 
 
 /* ── 6. HERO SHOWCASE INTERACTION ── */
 function initHeroTilt() {
   const showcase = document.querySelector('.hero-showcase');
-  if (!showcase) return;
+  if (!showcase || window.matchMedia('(pointer: coarse)').matches) return;
 
   showcase.addEventListener('mousemove', (e) => {
     const rect = showcase.getBoundingClientRect();
@@ -334,15 +325,14 @@ function initScrollReveal() {
 
   elements.forEach(el => observer.observe(el));
 
-  // Why left/right columns
   document.querySelectorAll('.why-left .why-feature').forEach((el, i) => {
     el.classList.remove('reveal');
-    el.classList.add('reveal-left', `reveal-delay-${i % 4 + 1}`);
+    el.classList.add('reveal-left', `reveal-delay-${(i % 4) + 1}`);
     observer.observe(el);
   });
   document.querySelectorAll('.why-right .why-feature').forEach((el, i) => {
     el.classList.remove('reveal');
-    el.classList.add('reveal-right', `reveal-delay-${i % 4 + 1}`);
+    el.classList.add('reveal-right', `reveal-delay-${(i % 4) + 1}`);
     observer.observe(el);
   });
 }
@@ -384,13 +374,11 @@ function initCounters() {
 
   counters.forEach(el => observer.observe(el));
 
-  // Ring number
   const ringNum = document.querySelector('.ring-number');
   if (ringNum) {
     const ringObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          let start = 0;
           const end = 99.99;
           const dur = 2000;
           const s = performance.now();
@@ -413,6 +401,7 @@ function initCounters() {
 
 /* ── 9. CARD 3D TILT ── */
 function initCardTilt() {
+  if (window.matchMedia('(pointer: coarse)').matches) return;
   const cards = document.querySelectorAll('[data-tilt]');
 
   cards.forEach(card => {
@@ -426,7 +415,6 @@ function initCardTilt() {
       const rotY = ((x - cx) / cx) * 8;
       card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-8px)`;
 
-      // Glow follows cursor
       const glow = card.querySelector('.card-glow');
       if (glow) {
         glow.style.left = `${(x / rect.width) * 100}%`;
@@ -437,9 +425,26 @@ function initCardTilt() {
     card.addEventListener('mouseleave', () => {
       card.style.transform = '';
       card.style.transition = 'transform 0.5s cubic-bezier(0.4,0,0.2,1)';
-      setTimeout(() => card.style.transition = '', 500);
+      setTimeout(() => { card.style.transition = ''; }, 500);
       const glow = card.querySelector('.card-glow');
       if (glow) glow.style.opacity = '';
+    });
+  });
+}
+
+
+/* ── 10. AUTO-SELECT SERVICE WHEN CLICKING SERVICE CARD CTA ── */
+function initServicePreselect() {
+  const serviceSelect = document.getElementById('service');
+  if (!serviceSelect) return;
+
+  document.querySelectorAll('a[data-service]').forEach(link => {
+    link.addEventListener('click', () => {
+      const val = link.getAttribute('data-service');
+      if (val) {
+        serviceSelect.value = val;
+        serviceSelect.dispatchEvent(new Event('input'));
+      }
     });
   });
 }
@@ -453,7 +458,6 @@ function initContactForm() {
   const submitBtn = document.getElementById('formSubmitBtn');
   if (!form) return;
 
-  // Live validation
   const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
   inputs.forEach(input => {
     input.addEventListener('blur', () => validateField(input));
@@ -494,7 +498,6 @@ function initContactForm() {
       return;
     }
 
-    // Submit to Formspree
     btnText.textContent = 'Sending…';
     submitBtn.disabled = true;
     submitBtn.style.opacity = '0.7';
@@ -505,9 +508,7 @@ function initContactForm() {
       const response = await fetch('https://formspree.io/f/xjyvkqvl', {
         method: 'POST',
         body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
       });
 
       if (response.ok) {
@@ -537,7 +538,6 @@ function initContactForm() {
     }
   });
 
-  // Add error/success styles
   const style = document.createElement('style');
   style.textContent = `
     .form-group input.error,
@@ -551,7 +551,6 @@ function initContactForm() {
     .form-group textarea.success {
       border-color: rgba(16,185,129,0.5) !important;
     }
-    .nav-link.active { color: #38bdf8 !important; }
   `;
   document.head.appendChild(style);
 }
@@ -594,7 +593,7 @@ function initFooterYear() {
 
 /* ── 14. CURSOR GLOW EFFECT ── */
 function initCursorGlow() {
-  if (window.matchMedia('(pointer: coarse)').matches) return; // Skip on touch devices
+  if (window.matchMedia('(pointer: coarse)').matches) return;
 
   const glow = document.createElement('div');
   glow.style.cssText = `
@@ -612,7 +611,6 @@ function initCursorGlow() {
 
   let targetX = 0, targetY = 0;
   let currentX = 0, currentY = 0;
-  let rafId;
 
   document.addEventListener('mousemove', (e) => {
     targetX = e.clientX;
@@ -631,15 +629,14 @@ function initCursorGlow() {
     currentY = lerp(currentY, targetY, 0.08);
     glow.style.left = currentX + 'px';
     glow.style.top = currentY + 'px';
-    rafId = requestAnimationFrame(animateGlow);
+    requestAnimationFrame(animateGlow);
   }
   animateGlow();
 }
 
 
-/* ── 15. SMOOTH SCROLL FOR CTAS ── */
+/* ── 15. SMOOTH SCROLL FOR CTAS & BUTTON RIPPLE ── */
 function initSmoothScrollCTAs() {
-  // Extra: add ripple effect to primary buttons
   document.querySelectorAll('.btn-primary, .btn-ghost, .btn-ghost-light').forEach(btn => {
     btn.addEventListener('click', function(e) {
       const rect = this.getBoundingClientRect();
@@ -665,34 +662,23 @@ function initSmoothScrollCTAs() {
   });
 
   const style = document.createElement('style');
-  style.textContent = `
-    @keyframes rippleAnim {
-      to { transform: scale(50); opacity: 0; }
-    }
-  `;
+  style.textContent = `@keyframes rippleAnim { to { transform: scale(50); opacity: 0; } }`;
   document.head.appendChild(style);
 }
 
 
-/* ── 16. FLOATING CARD GENTLE SCROLL ──
-   Cards inside hero-visual which has overflow:hidden — no parallax needed,
-   the CSS float animation already provides movement. Removing JS transform
-   override prevents conflicts with card-3's translateX(-50%) centering. */
-/* No scroll listener needed – pure CSS animation handles the motion */
+/* ── 16. GLASSMORPHISM CARD MOUSE HIGHLIGHT ── */
+function initGlassCardHighlight() {
+  document.querySelectorAll('.glass-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(56,189,248,0.07) 0%, rgba(255,255,255,0.04) 50%)`;
+    });
 
-
-/* ── 17. GLASSMORPHISM CARD MOUSE HIGHLIGHT ── */
-document.querySelectorAll('.glass-card').forEach(card => {
-  card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    card.style.background = `
-      radial-gradient(circle at ${x}% ${y}%, rgba(56,189,248,0.07) 0%, rgba(255,255,255,0.04) 50%)
-    `;
+    card.addEventListener('mouseleave', () => {
+      card.style.background = '';
+    });
   });
-
-  card.addEventListener('mouseleave', () => {
-    card.style.background = '';
-  });
-});
+}
